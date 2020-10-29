@@ -1,0 +1,43 @@
+[all]
+ip-10-250-205-50.us-west-2.compute.internal ansible_host=10.250.205.50
+ip-10-250-207-56.us-west-2.compute.internal ansible_host=10.250.207.56
+ip-10-250-197-219.us-west-2.compute.internal ansible_host=10.250.197.219
+ip-10-250-205-194.us-west-2.compute.internal ansible_host=10.250.205.194
+ip-10-250-202-204.us-west-2.compute.internal ansible_host=10.250.202.204
+ip-10-250-194-254.us-west-2.compute.internal ansible_host=10.250.194.254
+ip-10-250-204-185.us-west-2.compute.internal ansible_host=10.250.204.185
+ip-10-250-201-228.us-west-2.compute.internal ansible_host=10.250.201.228
+ip-10-250-197-26.us-west-2.compute.internal ansible_host=10.250.197.26
+ip-10-250-200-172.us-west-2.compute.internal ansible_host=10.250.200.172
+bastion ansible_host=34.218.252.210
+
+[bastion]
+bastion ansible_host=34.218.252.210
+
+[kube-master]
+ip-10-250-205-50.us-west-2.compute.internal
+ip-10-250-207-56.us-west-2.compute.internal
+ip-10-250-197-219.us-west-2.compute.internal
+
+
+[kube-node]
+ip-10-250-205-194.us-west-2.compute.internal
+ip-10-250-202-204.us-west-2.compute.internal
+ip-10-250-194-254.us-west-2.compute.internal
+ip-10-250-204-185.us-west-2.compute.internal
+
+
+[etcd]
+ip-10-250-201-228.us-west-2.compute.internal
+ip-10-250-197-26.us-west-2.compute.internal
+ip-10-250-200-172.us-west-2.compute.internal
+
+
+[k8s-cluster:children]
+kube-node
+kube-master
+
+
+[k8s-cluster:vars]
+apiserver_loadbalancer_domain_name="kubernetes-elb-devtest-1809044176.us-west-2.elb.amazonaws.com"
+

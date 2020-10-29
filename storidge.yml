@@ -1,0 +1,97 @@
+---
+  - hosts: all
+    gather_facts: false
+    tags: always
+    tasks:
+    - name: "Set up proxy environment"
+      set_fact:
+        proxy_env:
+          http_proxy: "{{ http_proxy | default ('') }}"
+          HTTP_PROXY: "{{ http_proxy | default ('') }}"
+          https_proxy: "{{ https_proxy | default ('') }}"
+          HTTPS_PROXY: "{{ https_proxy | default ('') }}"
+          no_proxy: "{{ no_proxy | default ('') }}"
+          NO_PROXY: "{{ no_proxy | default ('') }}"
+      no_log: true
+
+  - hosts: bastion[0]
+    gather_facts: False
+    roles:
+      - { role: kubespray-defaults }
+      - { role: bastion-ssh-config, tags: ["localhost", "bastion"] }
+
+  - name: Install storidge on worker nodes
+    hosts: kube-node
+    become: true
+    gather_facts: False
+    tasks:
+      - name: install storidge
+        shell: >
+          curl -fsSL ftp://download.storidge.com/pub/ce/cio-ce | sudo bash
+        register: installresult
+      - debug: msg="{{ installresult }}"
+
+  - name: Create Storidge Cluster
+    hosts: kube-node[0]
+    become: true
+    gather_facts: False
+    tasks:
+      # - name: install storidge
+        # shell: >
+          # curl -fsSL ftp://download.storidge.com/pub/ce/cio-ce | sudo bash
+        # register: installresult
+      # - debug: msg="{{ installresult }}"
+    
+      - name: get join token from active cluster
+        shell: >
+          sudo cioctl join-token | awk '/cioctl node add/ {print $5}'
+        register: jointoken 
+      - name: create cluster
+        shell: >
+          sudo cioctl create --ip {{ ansible_default_ipv4.address }} --kubernetes | sudo awk '/cioctl join/ {print $4}'
+        register: clustertoken
+        when: "jointoken.stdout == ''" 
+
+  - name: Join Storidge Nodes
+    hosts: kube-node
+    become: true
+    gather_facts: False
+    vars:
+      clustertoken: "{{ hostvars[groups['kube-node'][0]]['clustertoken'] }}"
+      jointoken: "{{ hostvars[groups['kube-node'][0]]['jointoken'] }}"
+      master: "{{ hostvars[groups['kube-node'][0]] }}"
+    tasks:
+      - name: check if already a cluster member
+        stat:
+          path: /etc/storidge/nodeid
+        register: nodeid
+      - debug: msg="{{ hostvars[groups['kube-node'][0]] }}"
+
+      - name: join nodes to cio cluster
+        command: "cioctl join {{ master.ansible_host }} {{ clustertoken.stdout }} --ip {{ ansible_default_ipv4.address }}"
+        register: result
+        until: result.stdout.find("Adding this node") != -1
+        retries: 5
+        delay: 1
+        when: master.ansible_host != ansible_default_ipv4.address
+      - debug: msg="{{ result }}"
+      - debug: msg="{{ clustertoken.stdout }}"
+      - debug: msg="{{ ansible_default_ipv4.address }}"
+
+  - name: Initialize Storidge Cluster
+    hosts: kube-node[0]
+    become: true
+    gather_facts: False
+    vars:
+      clustertoken: "{{ hostvars[groups['kube-node'][0]]['clustertoken'] }}"
+    tasks:
+      - name: cioctl init
+        command: "cioctl init {{ clustertoken.stdout.split('-')[1] }}"
+        register: clusterinit
+        when: "clustertoken is not skipped"
+
+      - name: show cluster init output
+        debug: var=clusterinit.stdout
+
+      - name: show cluster init error
+        debug: var=clusterinit.stderr
