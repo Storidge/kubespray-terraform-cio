@@ -45,7 +45,7 @@ terraform apply -var-file=credentials.tfvars
 - Ansible will automatically generate an ssh config file for your bastion hosts. To connect to hosts with ssh using bastion host use generated ssh-bastion.conf.
   Ansible automatically detects bastion and changes ssh_args  
 ```commandline
-ssh -F ./ssh-bastion.conf user@$ip
+ssh -F roles/bastion-ssh-config/templates/ssh-bastion.conf user@$ip
 ```
 
 - Once the infrastructure is created, you can run the kubespray playbooks and supply inventory/hosts with the `-i` flag.
