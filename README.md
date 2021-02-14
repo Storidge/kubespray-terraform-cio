@@ -13,6 +13,7 @@ This project will create:
 
 ## Quick Start
 
+For requirements, check https://github.com/kubernetes-sigs/kubespray#requirements
 
 In root folder:
 ```ShellSession
