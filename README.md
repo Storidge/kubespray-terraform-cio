@@ -1,4 +1,4 @@
-# Deploy a Production Ready HA Kubernetes Storidge Cluster with Terraform on AWS
+# Deploy a High Availability Kubernetes Storidge Cluster with Terraform on AWS
 
 ![Logo](https://i.imgur.com/FfIj2NA.png) ![Kubernetes Logo](https://raw.githubusercontent.com/kubernetes-sigs/kubespray/master/docs/img/kubernetes-logo.png) 
 
